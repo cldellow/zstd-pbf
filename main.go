@@ -27,6 +27,8 @@ var speedBestCompression bool
 var inFile = ""
 var outFile = ""
 
+var fileCount = 1
+
 func init() {
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr,
@@ -159,6 +161,16 @@ func recompressData(blob *pbfproto.Blob) error {
 	if err != nil {
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "fileCount %d\n", fileCount)
+	block, err := os.Create("blocks/" + fmt.Sprint(fileCount) + ".block")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not open block file '%d': %v", fileCount, err)
+		os.Exit(1)
+	}
+	block.Write(rawData)
+	defer block.Close()
+	fileCount ++
+
 	in := bytes.NewReader(rawData)
 	out := new(bytes.Buffer)
 	enc, err := zstd.NewWriter(out, zstd.WithEncoderLevel(compressionLevel))
